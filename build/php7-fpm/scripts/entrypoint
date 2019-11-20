@@ -1,0 +1,46 @@
+#!/bin/bash
+
+#deploy auth.json
+/usr/local/bin/envsubst < /docker/config/auth.json.tmpl > /root/.composer/auth.json || cat /root/.composer/auth.json
+
+# Ensure our Magento directory exists
+mkdir -p $MAGENTO_ROOT
+
+ if [[ ! -z "${PERFORM_INSTALLATION}" ]];
+then
+	rm -rf $MAGENTO_ROOT/*
+fi
+
+chown -R :www-data $MAGENTO_ROOT
+
+if [[ ! -z "${PERFORM_INSTALLATION}" ]];
+  then
+ 	composer create-project --repository=https://repo.magento.com/ magento/project-community-edition $MAGENTO_ROOT --stability=$MAGE_COMPOSER_STABILITY
+  else
+ 	composer --working-dir=$MAGENTO_ROOT install
+  fi
+
+chmod_app="$MAGENTO_ROOT/app/etc $MAGENTO_ROOT/var $MAGENTO_ROOT/generated $MAGENTO_ROOT/vendor"
+chmod_static="$MAGENTO_ROOT/pub/static $MAGENTO_ROOT/pub/media"
+find $chmod_app $chmod_static -type f -exec chmod g+w {} \;
+find $chmod_app $chmod_static -type d -exec chmod g+sw {} \;
+chmod g+x $MAGENTO_ROOT/bin/magento
+echo "Permissions have been set"
+
+echo "Check if magento is installed"
+if [ ! -f $MAGENTO_ROOT/var/installed ];
+then
+	/docker/scripts/install.sh
+	touch $MAGENTO_ROOT/var/installed && chmod ugo+rw $MAGENTO_ROOT/var/installed
+else
+	echo "It seems like magento already installed. If you want reinstall magento, remove $MAGENTO_ROOT/var/installed"
+fi
+
+echo "Clean cache"
+php $MAGENTO_ROOT/bin/magento cache:clean
+
+chown -R :www-data $MAGENTO_ROOT
+
+unset MYSQL_DB_PASSWD
+
+exec "$@"

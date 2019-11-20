@@ -1,0 +1,103 @@
+version: "3.4"
+
+services:
+  redis_cache:
+    image: "redis:5-alpine"
+    networks:
+      - mage
+
+  php7-fpm:
+    build:
+      context: ./build/php7-fpm
+    volumes:
+      - magento2-root:/var/www/magento2:nocopy
+    environment:
+      - PERFORM_INSTALLATION=${PERFORM_INSTALLATION}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-magento2}
+      - MYSQL_USER=${MYSQL_USER:-dbuser}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-admin}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - APPLICATION_PROTOCOL=${APPLICATION_PROTOCOL:-http://}
+      - APPLICATION_DOMAIN=${MAGENTO_HOST:-magento2.loc}
+      - MAGENTO_ROOT=${MAGENTO_ROOT:-/var/www/magento2}
+      - MAGENTO_MODE=${MAGENTO_MODE:-developer}
+      - MAGE_COMPOSER_STABILITY=${MAGE_COMPOSER_STABILITY:-stable}
+      - COMPOSER_MAGENTO_USERNAME=${COMPOSER_MAGENTO_USERNAME}
+      - COMPOSER_MAGENTO_PASSWORD=${COMPOSER_MAGENTO_PASSWORD}
+    restart: always
+    depends_on:
+      - mysql
+    networks:
+      - mage
+
+  php7-fpm-xdebug:
+    image: maxwhite/magento2-php7.2-fpm-xdebug-alpine
+    volumes:
+      - magento2-root:/var/www/magento2:nocopy
+    restart: always
+    depends_on:
+      - php7-fpm
+    networks:
+      - mage
+
+  nginx:
+    build:
+      context: ./build/nginx
+    environment:
+      - MAGE_ROOT=${MAGENTO_ROOT:-/var/www/magento2}
+      - MAGE_HOST=${MAGENTO_HOST:-magento2.loc}
+      - MAGE_MODE=${MAGENTO_MODE:-developer}
+    volumes:
+      - magento2-root:/var/www/magento2:nocopy
+    ports:
+      - 8080:80
+    depends_on:
+      - php7-fpm
+    networks:
+      - mage
+
+  varnish:
+    build:
+      context: ./build/varnish
+    environment:
+      - VCL_CONFIG=/varnish/data/varnish.vcl
+      - VARNISHD_PARAMS=-p default_ttl=3600 -p default_grace=3600 -p max_retries=64
+    ports:
+      - 80:80
+    depends_on:
+      - php7-fpm
+      - nginx
+    networks:
+      - mage
+
+  elasticsearch:
+    image: elasticsearch:6.8.3
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    environment:
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+    networks:
+      - mage
+
+  mysql:
+    image: percona:5.7
+    volumes:
+      - mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-magento2}
+      - MYSQL_USER=${MYSQL_USER:-dbuser}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-admin}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - 3307:3306
+    networks:
+      - mage
+
+volumes:
+  magento2-root:
+    external: true
+  mysql:
+  esdata:
+
+networks:
+  mage:

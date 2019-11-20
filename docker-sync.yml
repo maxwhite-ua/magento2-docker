@@ -1,0 +1,9 @@
+version: "2"
+
+options:
+  verbose: true
+syncs:
+  magento2-root:
+    src: ~/public_html/magento2-composer  # set path to Magento root ex. ~/public_html/magento2
+    sync_excludes_type: 'none'
+    sync_excludes: ['Path .idea', 'Path .git', 'BelowPath .git', 'Path var/*', 'Path node_modules/*']
