@@ -3,6 +3,8 @@ FROM php:7.3-fpm-alpine
 # Maintainer
 LABEL mainteiner=maxwhite.nemetc@gmail.com
 
+LABEL mainteiner=maxwhite.nemetc@gmail.com
+
 RUN set -xe \
     && apk add --no-cache --virtual .build-deps \
         mysql-client \
@@ -51,18 +53,21 @@ RUN sed -i 's/pm.max_children = 5/pm.max_children = 6/' /usr/local/etc/php-fpm.d
 # Get composer installed to /usr/local/bin/composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-VOLUME /root/.composer/cache
+RUN apk add --no-cache --update --virtual .phpize-deps $PHPIZE_DEPS \
+    && pecl install xdebug \
+    && docker-php-ext-enable xdebug \
+    && apk del .phpize-deps $PHPIZE_DEPS \
+    && echo 'xdebug.remote_enable=1' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo 'xdebug.remote_host="docker.for.mac.localhost"' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo 'xdebug.remote_connect_back=0' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo 'xdebug.remote_port=9000' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo 'xdebug.remote_autostart = 1' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo 'xdebug.idekey="PHPSTORM"' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo 'xdebug.max_nesting_level=1000' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
 
 ENV MAGENTO_ROOT /var/www/magento2
 
-COPY config/ /docker/config
-
-COPY scripts/ /docker/scripts
-
-RUN sed -i $'s/\r$//' /docker/scripts/* && chmod ug+rx /docker/scripts/*
-
 WORKDIR ${MAGENTO_ROOT}
-
-ENTRYPOINT ["/docker/scripts/entrypoint"]
 
 CMD ["php-fpm", "-R"]

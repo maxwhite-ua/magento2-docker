@@ -5,6 +5,11 @@ map ${DOLLAR}cookie_XDEBUG_SESSION ${DOLLAR}fastcgi_backend_name {
 
 server {
     listen 80 default_server;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+
+    ssl_certificate /etc/ssl/certs/${MAGE_HOST}.crt;
+    ssl_certificate_key /etc/ssl/private/${MAGE_HOST}.key;
 
     server_name ${MAGE_HOST};
 

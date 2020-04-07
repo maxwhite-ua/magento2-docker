@@ -8,7 +8,7 @@ services:
 
   php7-fpm:
     build:
-      context: ./build/php7-fpm
+      context: ./build/php7-fpm 
     volumes:
       - magento2-root:/var/www/magento2:nocopy
     environment:
@@ -31,7 +31,8 @@ services:
       - mage
 
   php7-fpm-xdebug:
-    image: maxwhite/magento2-php7.2-fpm-xdebug-alpine
+    build:
+      context: ./build/php7-fpm-xdebug
     volumes:
       - magento2-root:/var/www/magento2:nocopy
     restart: always
@@ -43,6 +44,8 @@ services:
   nginx:
     build:
       context: ./build/nginx
+      args:
+        - MAGE_HOST=${MAGENTO_HOST:-magento2.loc}
     environment:
       - MAGE_ROOT=${MAGENTO_ROOT:-/var/www/magento2}
       - MAGE_HOST=${MAGENTO_HOST:-magento2.loc}
@@ -50,25 +53,26 @@ services:
     volumes:
       - magento2-root:/var/www/magento2:nocopy
     ports:
-      - 8080:80
+      - 80:80
+      - 443:443
     depends_on:
       - php7-fpm
     networks:
       - mage
 
-  varnish:
-    build:
-      context: ./build/varnish
-    environment:
-      - VCL_CONFIG=/varnish/data/varnish.vcl
-      - VARNISHD_PARAMS=-p default_ttl=3600 -p default_grace=3600 -p max_retries=64
-    ports:
-      - 80:80
-    depends_on:
-      - php7-fpm
-      - nginx
-    networks:
-      - mage
+  # varnish:
+  #   build:
+  #     context: ./build/varnish
+  #   environment:
+  #     - VCL_CONFIG=/varnish/data/varnish.vcl
+  #     - VARNISHD_PARAMS=-p default_ttl=3600 -p default_grace=3600 -p max_retries=64
+  #   ports:
+  #     - 80:80
+  #   depends_on:
+  #     - php7-fpm
+  #     - nginx
+  #   networks:
+  #     - mage
 
   elasticsearch:
     image: elasticsearch:6.8.3
