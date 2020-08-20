@@ -24,6 +24,8 @@ services:
       - MAGE_COMPOSER_STABILITY=${MAGE_COMPOSER_STABILITY:-stable}
       - COMPOSER_MAGENTO_USERNAME=${COMPOSER_MAGENTO_USERNAME}
       - COMPOSER_MAGENTO_PASSWORD=${COMPOSER_MAGENTO_PASSWORD}
+      - COMPOSER_AMASTY_USERNAME=${COMPOSER_AMASTY_USERNAME}
+      - COMPOSER_AMASTY_PASSWORD=${COMPOSER_AMASTY_PASSWORD}
     restart: always
     depends_on:
       - mysql
@@ -75,16 +77,18 @@ services:
   #     - mage
 
   elasticsearch:
-    image: elasticsearch:6.8.3
+    image: elasticsearch:7.6.2
+    # image: elasticsearch:7.8.1
     volumes:
       - esdata:/usr/share/elasticsearch/data
     environment:
-      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+      - discovery.type=single-node
+      # ES_JAVA_OPTS: "-Xmx512m -Xms512m"
     networks:
       - mage
 
   mysql:
-    image: percona:5.7
+    image: mariadb:10.4
     volumes:
       - mysql:/var/lib/mysql
     environment:

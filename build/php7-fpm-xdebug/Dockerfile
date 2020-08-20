@@ -1,4 +1,4 @@
-FROM php:7.3-fpm-alpine
+FROM php:7.4-fpm-alpine
 
 # Maintainer
 LABEL mainteiner=maxwhite.nemetc@gmail.com
@@ -39,9 +39,9 @@ RUN apk add --no-cache --virtual .gettext gettext \
     && apk del .gettext \
     && mv /tmp/envsubst /usr/local/bin/ 
 
-RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/ \
+RUN docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ \
     && docker-php-ext-configure hash --with-mhash \
-    && docker-php-ext-install intl  -j$(nproc) xsl gd zip pdo_mysql opcache soap bcmath json iconv
+    && docker-php-ext-install intl  -j$(nproc) xsl gd zip pdo_mysql opcache soap bcmath json iconv sockets
 
 RUN sed -i 's/pm.max_children = 5/pm.max_children = 6/' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's/pm.start_servers = 2/pm.start_servers = 4/' /usr/local/etc/php-fpm.d/www.conf \
@@ -60,7 +60,7 @@ RUN apk add --no-cache --update --virtual .phpize-deps $PHPIZE_DEPS \
     && echo 'xdebug.remote_enable=1' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo 'xdebug.remote_host="docker.for.mac.localhost"' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo 'xdebug.remote_connect_back=0' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo 'xdebug.remote_port=9000' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo 'xdebug.remote_port=9001' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo 'xdebug.remote_autostart = 1' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo 'xdebug.idekey="PHPSTORM"' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo 'xdebug.max_nesting_level=1000' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini

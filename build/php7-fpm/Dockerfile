@@ -1,4 +1,4 @@
-FROM php:7.3-fpm-alpine
+FROM php:7.4-fpm-alpine
 
 # Maintainer
 LABEL mainteiner=maxwhite.nemetc@gmail.com
@@ -37,9 +37,9 @@ RUN apk add --no-cache --virtual .gettext gettext \
     && apk del .gettext \
     && mv /tmp/envsubst /usr/local/bin/ 
 
-RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/ \
+RUN docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ \
     && docker-php-ext-configure hash --with-mhash \
-    && docker-php-ext-install intl  -j$(nproc) xsl gd zip pdo_mysql opcache soap bcmath json iconv
+    && docker-php-ext-install intl  -j$(nproc) xsl gd zip pdo_mysql opcache soap bcmath json iconv sockets
 
 RUN sed -i 's/pm.max_children = 5/pm.max_children = 6/' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's/pm.start_servers = 2/pm.start_servers = 4/' /usr/local/etc/php-fpm.d/www.conf \

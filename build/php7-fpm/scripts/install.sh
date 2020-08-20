@@ -52,22 +52,22 @@ php ${MAGENTO_ROOT}/bin/magento setup:install --admin-user=$magento_admin_userna
     --cache-backend=redis --cache-backend-redis-server=redis_cache --cache-backend-redis-db=0 \
     --page-cache=redis --page-cache-redis-server=redis_cache --page-cache-redis-db=1 --page-cache-redis-compress-data=1 \
     --session-save=redis --session-save-redis-host=redis_cache --session-save-redis-log-level=3 --session-save-redis-db=2 \
-    --cleanup-database --magento-init-params="MAGE_MODE=${MAGENTO_MODE}"
+    --elasticsearch-host=elasticsearch --cleanup-database --magento-init-params="MAGE_MODE=${MAGENTO_MODE}"
  
 #echo "Set Developer mode"
 #php ${MAGENTO_ROOT}/bin/magento deploy:mode:set ${MAGENTO_MODE}
 
-echo "Set Caching Application to Varnish"
-php ${MAGENTO_ROOT}/bin/magento config:set --scope=default --scope-code=0 system/full_page_cache/caching_application 2
+# echo "Set Caching Application to Varnish"
+# php ${MAGENTO_ROOT}/bin/magento config:set --scope=default --scope-code=0 system/full_page_cache/caching_application 2
 
-echo "Set Admin Session Lifetime"
-php ${MAGENTO_ROOT}/bin/magento config:set admin/security/session_lifetime 31536000
+# echo "Set Admin Session Lifetime"
+# php ${MAGENTO_ROOT}/bin/magento config:set admin/security/session_lifetime 31536000
 
-echo "Set Catalog Search to ElasticSearch"
-php ${MAGENTO_ROOT}/bin/magento config:set catalog/search/engine elasticsearch6
-php ${MAGENTO_ROOT}/bin/magento config:set catalog/search/elasticsearch6_server_hostname elasticsearch
-php ${MAGENTO_ROOT}/bin/magento config:set catalog/search/elasticsearch6_server_port 9200
-php ${MAGENTO_ROOT}/bin/magento config:set catalog/search/elasticsearch6_index_prefix magento2
+# echo "Set Catalog Search to ElasticSearch"
+# php ${MAGENTO_ROOT}/bin/magento config:set catalog/search/engine elasticsearch
+# php ${MAGENTO_ROOT}/bin/magento config:set catalog/search/elasticsearch6_server_hostname elasticsearch
+# php ${MAGENTO_ROOT}/bin/magento config:set catalog/search/elasticsearch6_server_port 9200
+# php ${MAGENTO_ROOT}/bin/magento config:set catalog/search/elasticsearch6_index_prefix magento2
 
 echo "Start Reindex"
 php ${MAGENTO_ROOT}/bin/magento indexer:reindex
